@@ -75,11 +75,13 @@ void    led_task(void *arg) //make transfer of gpio via arg, starting as a stati
     os_printf("led_task started\n");
     value=cJSON_CreateBool(0); //value doesn't matter
     while(1) {
-        vTaskDelay(1500); //15 sec
+        vTaskDelay(15000); //15 sec
         original=GPIO_INPUT(GPIO_Pin_2); //get original state
 //      os_printf("original:%d\n",original);
-        value->type=original^1;
-        GPIO_OUTPUT(GPIO_Pin_2,original^1); // and toggle
+        //value->type=original^1;
+        value->type=original;
+        //GPIO_OUTPUT(GPIO_Pin_2,original^1); // and toggle
+//        GPIO_OUTPUT(GPIO_Pin_2,original); // and toggle
         change_value(    gpio2.aid,gpio2.iid,value);
         send_events(NULL,gpio2.aid,gpio2.iid);
     }
@@ -92,7 +94,7 @@ void led(int aid, int iid, cJSON *value, int mode)
     switch (mode) {
         case 1: { //changed by gui
             char *out; out=cJSON_Print(value);  os_printf("led %s\n",out);  free(out);  // Print to text, print it, release the string.
-            if (value) GPIO_OUTPUT(GPIO_Pin_2, value->type);
+            if (value) GPIO_OUTPUT(GPIO_Pin_2, !value->type);
         }break;
         case 0: { //init
             gpio2_in_cfg.GPIO_IntrType = GPIO_PIN_INTR_DISABLE;         //no interrupt
@@ -163,17 +165,17 @@ void    hkc_user_init(char *accname)
     //service 0 describes the accessory
     chas=addService(      sers,++iid,APPLE,ACCESSORY_INFORMATION_S);
     addCharacteristic(chas,aid,++iid,APPLE,NAME_C,accname,NULL);
-    addCharacteristic(chas,aid,++iid,APPLE,MANUFACTURER_C,"HacK",NULL);
+    addCharacteristic(chas,aid,++iid,APPLE,MANUFACTURER_C,"marknnd",NULL);
     addCharacteristic(chas,aid,++iid,APPLE,MODEL_C,"Rev-1",NULL);
     addCharacteristic(chas,aid,++iid,APPLE,SERIAL_NUMBER_C,"1",NULL);
     addCharacteristic(chas,aid,++iid,APPLE,IDENTIFY_C,NULL,identify);
     //service 1
     chas=addService(      sers,++iid,APPLE,SWITCH_S);
-    addCharacteristic(chas,aid,++iid,APPLE,NAME_C,"led",NULL);
+    addCharacteristic(chas,aid,++iid,APPLE,NAME_C,"LED",NULL);
     addCharacteristic(chas,aid,++iid,APPLE,POWER_STATE_C,"1",led);
     //service 2
     chas=addService(      sers,++iid,APPLE,LIGHTBULB_S);
-    addCharacteristic(chas,aid,++iid,APPLE,NAME_C,"light",NULL);
+    addCharacteristic(chas,aid,++iid,APPLE,NAME_C,"Bulb",NULL);
     addCharacteristic(chas,aid,++iid,APPLE,POWER_STATE_C,"0",NULL);
     addCharacteristic(chas,aid,++iid,APPLE, BRIGHTNESS_C,"0",NULL);
 
@@ -197,7 +199,7 @@ void user_init(void)
     os_printf("start of user_init @ %d\n",system_get_time()/1000);
     
 //use this block only once to set your favorite access point or put your own selection routine
-/*    wifi_set_opmode(STATION_MODE); 
+    wifi_set_opmode(STATION_MODE); 
     struct station_config *sconfig = (struct station_config *)zalloc(sizeof(struct station_config));
     sprintf(sconfig->ssid, ""); //don't forget to set this if you use it
     sprintf(sconfig->password, ""); //don't forget to set this if you use it
