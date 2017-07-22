@@ -23,9 +23,51 @@
  */
 
 #include "esp_common.h"
+
+//HKA
 #include "hkc.h"
 #include "gpio.h"
 #include "queue.h"
+
+#include "lwip/sockets.h"
+#include "lwip/dns.h"
+#include "lwip/netdb.h"
+
+#include "user_config.h"
+#include "user_devicefind.h"
+#include "user_webserver.h"
+
+#if HTTPD_SERVER
+#include "espfsformat.h"
+#include "espfs.h"
+#include "captdns.h"
+#include "httpd.h"
+#include "cgiwifi.h"
+#include "httpdespfs.h"
+#include "user_cgi.h"
+#include "webpages-espfs.h"
+#endif
+
+#if HTTPD_SERVER
+HttpdBuiltInUrl builtInUrls[]={
+        {"*", cgiRedirectApClientToHostname, "esp.nonet"},
+        {"/", cgiRedirect, "/index.html"},
+        {"/wifi", cgiRedirect, "/wifi/wifi.tpl"},
+        {"/wifi/wifiscan.cgi", cgiWiFiScan, NULL},
+        {"/wifi/wifi.tpl", cgiEspFsTemplate, tplWlan},
+        {"/wifi/connect.cgi", cgiWiFiConnect, NULL},
+        {"/wifi/connstatus.cgi", cgiWiFiConnStatus, NULL},
+        {"/wifi/setmode.cgi", cgiWiFiSetMode, NULL},
+
+        {"/config", cgiEspApi, NULL},
+        {"/client", cgiEspApi, NULL},
+        {"/upgrade", cgiEspApi, NULL},
+
+        {"*", cgiEspFsHook, NULL}, //Catch-all cgi function for the filesystem
+        {NULL, NULL, NULL} //end marker
+};
+#endif
+
 
 /******************************************************************************
  * FunctionName : user_rf_cal_sector_set
